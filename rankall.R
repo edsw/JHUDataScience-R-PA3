@@ -1,38 +1,35 @@
 rankall <- function(outcome, num = "best") {
-	## Read outcome data
-	outcomeFile <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-	outcomeOrdered <- outcomeFile[order(outcomeFile$State, outcomeFile$Hospital.Name),]
-
-	if (outcome != "heart attack" && outcome != "heart failure" && outcome != "pneumonia") {
+	if (!outcome %in% c("heart attack", "heart failure", "pneumonia")) {
 		stop("invalid outcome")
 	}
 
-	columns <- list(heart_attack=11, heart_failure=17, pneumonia=23)
-	column <- as.numeric(columns[gsub(" ", "_", outcome)])
-	states <- names(split(outcomeOrdered, outcomeOrdered$State))
+	csv    <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+	ocsv   <- csv[order(csv$State, csv$Hospital.Name),]
+	states <- unique(ocsv$State)	
+	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
+	output <- data.frame(hospital = character(), state = character(), stringsAsFactors = FALSE)
 
-	output = data.frame(hospital = character(), state = character(), stringsAsFactors=FALSE)
-	if (num == "best") {
-		for (i in 1:length(states)) {
-			tmp <- subset(outcomeOrdered, State == states[i])
-			data <- suppressWarnings(as.numeric(tmp[, column]))
-			row <- which.min(data)
-			output <- rbind(output, data.frame(hospital = tmp[row,2] , state = states[i], stringsAsFactors=FALSE))
+	for (i in 1:length(states)) {
+		sub  <- subset(ocsv, State == states[i])
+		vals <- suppressWarnings(as.numeric(sub[, column]))
+
+		if (num == "best") {
+			output <- rbind(output, data.frame(
+				hospital = sub[which.min(vals),2],
+				state = states[i], stringsAsFactors=FALSE))
 		}
-	}
-	else if (num == "worst") {
-		for (i in 1:length(states)) {
-			tmp <- subset(outcomeOrdered, State == states[i])
-			data <- suppressWarnings(as.numeric(tmp[, column]))
-			row <- which.max(data)
-			output <- rbind(output, data.frame(hospital = tmp[row,2] , state = states[i], stringsAsFactors=FALSE))
+		else if (num == "worst") {
+			output <- rbind(output, data.frame(
+				hospital = sub[which.max(vals),2],
+				state = states[i], stringsAsFactors=FALSE))
 		}
-	}
-	else if (is.numeric(num)) {
-		for (i in 1:length(states)) {
-			tmp <- subset(outcomeOrdered, State == states[i])
-			data <- suppressWarnings(as.numeric(tmp[, column]))
-			output <- rbind(output, data.frame(hospital = tmp[order(data)[num],2][1] , state = states[i]))
+		else if (is.numeric(num)) {
+			output <- rbind(output, data.frame(
+				hospital = sub[order(vals)[num],2][1],
+				state = states[i], stringsAsFactors=FALSE))
+		}
+		else {
+			stop("invalid num")
 		}
 	}
 
