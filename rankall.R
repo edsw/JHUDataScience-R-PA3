@@ -4,13 +4,13 @@ rankall <- function(outcome, num = "best") {
 	}
 
 	csv    <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-	ocsv   <- csv[order(csv$State, csv$Hospital.Name),]
-	states <- unique(ocsv$State)	
+	csv    <- csv[order(csv$State, csv$Hospital.Name),]
+	states <- unique(csv$State)	
 	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
 	output <- data.frame(hospital = character(), state = character(), stringsAsFactors = FALSE)
 
 	for (i in 1:length(states)) {
-		sub  <- subset(ocsv, State == states[i])
+		sub  <- subset(csv, State == states[i])
 		vals <- suppressWarnings(as.numeric(sub[, column]))
 
 		if (num == "best") {

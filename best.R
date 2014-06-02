@@ -1,10 +1,10 @@
 
 
 best <- function(state, outcome) {
-	csv  <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-	ocsv <- subset(csv[order(csv$Hospital.Name),], State == state)
+	csv <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+	csv <- subset(csv[order(csv$Hospital.Name),], State == state)
 
-	if (nrow(ocsv) == 0) {
+	if (nrow(csv) == 0) {
 		stop("invalid state")
 	}
 
@@ -13,7 +13,7 @@ best <- function(state, outcome) {
 	}
 
 	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
-	vals   <- suppressWarnings(as.numeric(ocsv[, column]))
+	vals   <- suppressWarnings(as.numeric(csv[, column]))
 
-	ocsv[which.min(vals), 2]
+	csv[which.min(vals), 2]
 }
