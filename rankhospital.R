@@ -1,35 +1,19 @@
 rankhospital <- function(state, outcome, num = "best") {
-	## Read outcome data
-	outcomeFile <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-	outcomeFiltered <- outcomeFile[outcomeFile$State == state,]
-	outcomeFiltered <- outcomeFiltered[order(outcomeFiltered$Hospital.Name),]
+	csv  <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+	ocsv <- subset(csv[order(csv$Hospital.Name),], State == state)
 
-	## Check that state and outcome are valid
-	if (nrow(outcomeFiltered) == 0) {
+	if (nrow(ocsv) == 0) {
 		stop("invalid state")
 	}
 
-	if (outcome != "heart attack" && outcome != "heart failure" && outcome != "pneumonia") {
+	if (!outcome %in% c("heart attack", "heart failure", "pneumonia")) {
 		stop("invalid outcome")
 	}
 
-	## Return hospital name in that state with the given rank 30-day death rate
-	columns <- list(heart_attack=11, heart_failure=17, pneumonia=23)
-	column <- as.numeric(columns[gsub(" ", "_", outcome)])
-	data <- suppressWarnings(as.numeric(outcomeFiltered[, column]))
-
-	output = NA
-	if (num == "best") {
-		row <- which.min(data)
-		output <- outcomeFiltered[row,2]
-	}
-	else if (num == "worst") {
-		row <- which.max(data)
-		output <- outcomeFiltered[row,2]
-	}
-	else if (is.numeric(num)) {
-		output <- outcomeFiltered[order(data)[num],2][1]
-	}
-
-	output
+	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
+	vals   <- suppressWarnings(as.numeric(ocsv[, column]))
+	
+	ifelse(num == "best",  ocsv[which.min(vals),2],
+		ifelse(num == "worst", ocsv[which.max(vals),2],
+			ocsv[order(vals)[num],2][1]))
 }
