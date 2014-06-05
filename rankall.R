@@ -73,6 +73,6 @@ rankall3 <- function(outcome, num = "best") {
 
 	DT <- data.table(csv)
 	setkey(DT, "State")
-	a <- DT[, list(Outcome = min(Outcome, na.rm = TRUE)), by=key(DT)]
-	a
+		
+	a <- DT[, list(Hospital.Name = .SD$Hospital.Name), by=list(State, Outcome)]
 }
