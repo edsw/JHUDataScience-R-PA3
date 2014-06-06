@@ -38,21 +38,23 @@ rankall.datatable <- function(outcome, num = "best") {
 		stop("invalid outcome")
 	}
 
-	csv    <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
+	csv <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
 
+	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
 	colnames(csv)[column] <- "Outcome"
-	out <- NULL
+
 	DT <- data.table(csv, key=c("State", "Hospital.Name"))
 
+	out <- NULL
+	
 	if (num == "best") {
-		out <- DT[, Hospital.Name[which.min(Outcome)], by=State]
+		out <- DT[, Hospital.Name[suppressWarnings(which.min(Outcome))], by=State]
 	}
 	else if (num == "worst") {
-		out <- DT[, Hospital.Name[which.max(Outcome)], by=State]
+		out <- DT[, Hospital.Name[suppressWarnings(which.max(Outcome))], by=State]
 	}
 	else if (is.numeric(num)) {
-		out <- DT[, Hospital.Name[order(Outcome)[num]], by=State]
+		out <- DT[, Hospital.Name[suppressWarnings(order(Outcome)[num])], by=State]
 	}
 
 	setnames(out, c("state", "hospital"))
