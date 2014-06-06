@@ -33,46 +33,28 @@ rankall <- function(outcome, num = "best") {
 	as.data.frame(output)
 }
 
-rankall2 <- function(outcome, num = "best") {
+rankall.datatable <- function(outcome, num = "best") {
 	if (!outcome %in% c("heart attack", "heart failure", "pneumonia")) {
 		stop("invalid outcome")
 	}
 
 	csv    <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
 	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
+
 	colnames(csv)[column] <- "Outcome"
-	
-	output <- aggregate(Outcome ~ State, csv, function(x) {
-		x <- as.numeric(x)
-		y <- NULL
-		if (num == "best") {
-			y <- min(x, na.rm = TRUE)
-		} else if (num == "worst") {
-			y <- max(x, na.rm = TRUE)
-		}
-		else if (is.numeric(num)) {
-			y <- sort(x)[num][1]
-		}
-		else {
-			stop("invalid num")
-		}
-		as.character(y)
-	})
+	out <- NULL
+	DT <- data.table(csv, key=c("State", "Hospital.Name"))
 
-	output
-}
-
-rankall3 <- function(outcome, num = "best") {
-	if (!outcome %in% c("heart attack", "heart failure", "pneumonia")) {
-		stop("invalid outcome")
+	if (num == "best") {
+		out <- DT[, Hospital.Name[which.min(Outcome)], by=State]
+	}
+	else if (num == "worst") {
+		out <- DT[, Hospital.Name[which.max(Outcome)], by=State]
+	}
+	else if (is.numeric(num)) {
+		out <- DT[, Hospital.Name[order(Outcome)[num]], by=State]
 	}
 
-	csv    <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-	column <- ifelse(outcome == "heart attack", 11, ifelse(outcome == "heart failure", 17, 23))
-	colnames(csv)[column] <- "Outcome"
-
-	DT <- data.table(csv)
-	setkey(DT, "State")
-		
-	a <- DT[, list(Hospital.Name = .SD$Hospital.Name), by=list(State, Outcome)]
+	setnames(out, c("state", "hospital"))
+	out
 }
